@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>斗兽棋</title>
+
+		<style type="text/css">
+			* {
+				margin: 0px;
+				padding: 0px;
+				list-style: none;
+				box-sizing: border-box;
+				border: none;
+				outline: none;
+			}
+			
+			.lt {
+				float: left;
+			}
+			
+			.rt {
+				float: right;
+			}
+			
+			.msgcont {
+				position: fixed;
+				top: 0px;
+				width: 100%;
+				font-size: 0.24rem;
+				color: #666;
+				z-index: 110;
+			}
+			
+			.msg {
+				width: 6rem;
+				padding: 0.2rem 0.3rem;
+				line-height: 0.3rem;
+				background: rgba(255, 255, 255, 0.9);
+				border-radius: 0.2rem;
+				margin: 0px auto;
+				margin-top: 0.3rem;
+			}
+			
+			body {
+				background: #fff;
+			}
+			
+			div.home,
+			div.suited {
+				width: 6.4rem;
+				height: 1rem;
+				line-height: 1rem;
+				font-size: 0.3rem;
+				padding: 0px 0.2rem;
+				color: #999;
+				border-bottom: 1px solid #eee;
+			}
+			
+			div.home>p {
+				float: left;
+			}
+			
+			div.home>span {
+				float: right;
+				color: #00FE00;
+				font-size: 0.2rem;
+				line-height: 0.6rem;
+				margin-top: 0.4rem;
+			}
+			
+			p.addbtn {
+				position: fixed;
+				bottom: 0.6rem;
+				right: 0.3rem;
+				color: #00FE00;
+				background: #fff;
+				width: 0.8rem;
+				height: 0.8rem;
+				border-radius: 50%;
+				box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.3);
+				text-align: center;
+				line-height: 0.8rem;
+				font-size: 0.4rem;
+				font-weight: 400;
+			}
+			
+			.add {
+				position: fixed;
+				width: 100%;
+				height: 100%;
+				top: 0px;
+				left: 0px;
+				display: none;
+				background: rgba(255,255,255,0.8)
+			}
+			
+			.add>div {
+				width: 6.4rem;
+				height: 4rem;
+				background: #fff;
+				border-radius: 0.1rem;
+				left: 0rem;
+				top: 0px;
+				bottom: 0px;
+				position: absolute;
+				margin: auto;
+				transition: all 0.6s;
+				border: 1px solid #eee;
+			}
+			
+			.add>div>p {
+				position: absolute;
+				top: -0.3rem;
+				right: -0.1rem;
+				line-height: 0.6rem;
+				color: #e4393c;
+				font-size: 0.2rem;
+				background: #FFF;
+				border-radius: 0.1rem;
+				padding: 0px 0.2rem;
+				box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.3);
+			}
+			
+			.add>div>input {
+				display: block;
+				width: 5.6rem;
+				height: 1rem;
+				border-radius: 0.1rem;
+				border: 1px solid #eee;
+				position: absolute;
+				top: 0.6rem;
+				left: 0.2rem;
+				padding: 0px 0.2rem;
+			}
+			
+			.add>div>div {
+				font-size: 0.24rem;
+				width: 3rem;
+				height: 0.8rem;
+				text-align: center;
+				line-height: 0.8rem;
+				position: absolute;
+				left: 0px;
+				bottom: 0px;
+				border-bottom-left-radius: 0.1rem;
+				color: #999;
+				border-top: 1px solid #eee;
+			}
+			
+			.add>div>div.addcreate {
+				color: #e4393c;
+				border-left: 1px solid #eee;
+				left: 3rem;
+				border-bottom-left-radius: 0px;
+				border-bottom-right-radius: 0.1rem;
+			}
+		</style>
+
+		<script src="jquery.min.js"></script>
+		<script src="main.js"></script>
+	</head>
+
+	<body>
+		<div id="msgCont" class="msgcont"></div>
+		<div class="suited" id="suited">快速匹配</div>
+		<div id="content"></div>
+		<p id="addbtn" class="addbtn">+</p>
+		<div class="add" id="add">
+			<div>
+				<p>关闭</p>
+				<input type="text" id="nameText" placeholder="请输入房间名字" maxlength=8 />
+				<div class="addinfo" id="addinfo">进入房间</div>
+				<div class="addcreate" id="addcreate">创建房间</div>
+			</div>
+		</div>
+	</body>
+
+</html>
+<script type="text/javascript">
+	var socketsname = [];
+	var ws = new WebSocket("wss://ccskill.club:3000/getHome");
+	ws.onmessage = function(evt) {
+		var data = JSON.parse(evt.data);
+		if(data.type == "set"){
+			return false;
+		}
+		if(data.type == "getHome") {
+			socketsname = data.socketsname;
+			var oDiv = ""
+			for(var i in data.socketsname) {
+				var n = data.socketsname[i]
+				var hint = "等待开始"
+				if(n.len >= 2) {
+					hint = "观战"
+				}
+				oDiv += '<div class="home"><p>' + n.name + '</p> <span>' + hint + '</span></div>';
+			}
+			$("#content").html(oDiv)
+			$(".home").unbind("click").click(function() {
+				location.href = "game/play/play.html?" + encodeURI($(this).children("p").html());
+			})
+		} else {
+			$.hint(data.msg)
+		}
+	};
+	ws.onerror = function(evt) {
+		$.hint("断开链接")
+	};
+
+	//点击添加房间
+	$("#addbtn").click(function() {
+		$("#add").fadeIn(200)
+		$("#add>div").css({
+			"width": "6rem",
+			"left": "0.2rem",
+			"height": "3rem"
+		});
+	})
+	$("#add>div").click(function() {
+		return false;
+	})
+
+	function closeadd() {
+		$("#add").fadeOut(200);
+		$("#add>div").css({
+			"width": "6.4rem",
+			"left": "0rem",
+			"height": "4rem"
+		});
+	}
+	$("#add>div>p").click(function() {
+		closeadd()
+	})
+
+	//查询有没有房间
+	function findHome(name) {
+		if(!name) {
+			$.hint("输入字符为空")
+			return false;
+		} else {
+			for(var i in socketsname) {
+				if(socketsname[i].name == name) {
+					return "ok";
+				}
+			}
+			return "no";
+		}
+	}
+
+	//点击创建房间
+	$("#addcreate").click(function() {
+		var name = $("#nameText").val();
+		var isOk = findHome(name);
+		if(!isOk) {
+			return false;
+		}
+		if(isOk == "ok") {
+			$.hint("房间名字被占用")
+		} else {
+			location.href = "game/play/play.html?" + encodeURI(name);
+		}
+	})
+	//点击进入房间
+	$("#addinfo").click(function() {
+		var name = $("#nameText").val();
+		var isOk = findHome(name);
+		if(!isOk) {
+			return false;
+		}
+		if(isOk == "ok") {
+			$.session("utype",2)
+			location.href = "game/play/play.html?" + encodeURI(name);
+		} else {
+			$.hint("没有该房间");
+		}
+	})
+	
+	//点击快速匹配
+	$("#suited").click(function(){
+		for(var i in socketsname) {
+			if(socketsname[i].len == 1) {
+				location.href = "game/play/play.html?" + encodeURI(socketsname[i].name);
+			}
+		}
+		$.hint("当前没有可加入的房间");
+	})
+</script>
