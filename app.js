@@ -1,9 +1,8 @@
 var http = require("http"),
 	https = require("https"),
-	express = require('express'),
+	express = require('express'),	
+    fs = require('fs'),
 	app = express(),
-	fs = require('fs'),
-	path = require('path'),
 	socket = require('ws'),
 	WebSocketServer = socket.Server;
 	
@@ -17,15 +16,13 @@ app.all('*', function(req, res, next) {
 	next();
 });
 
-app.use(express.static(path.join(__dirname, "public")));
-
 var options = {
 	key:fs.readFileSync('./2_ccskill.club.key'),
 	cert:fs.readFileSync('./1_ccskill.club_bundle.crt')
 };
  
-var httpsServer = https.createServer(options, app).listen(3000,function(){
-	console.log("443端口已启动！")
+var httpsServer = https.createServer(options, app).listen(3002,function(){
+	console.log("3002端口已启动！")
 });
 
 wss = new WebSocketServer({ server: httpsServer });
@@ -61,6 +58,7 @@ function getHome(ws,isonsend){
 	}
 }
 wss.on('connection', function (ws,req) {
+  console.log("asd");
 	var obj = []
 	if(req.url == "/undefined"){
 		if(ws.readyState == 1){
